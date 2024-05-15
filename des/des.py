@@ -48,10 +48,10 @@ def CQ_T_macchina_funzionante(macchina, env, operatore, tcq, offset, nome): #a d
             # Qui c'è la modifica che simula il controllo a macchina funzionante: carica ugualmente la saturazione ma non ferma la macchina
             yield env.timeout(0)
             op =  list(macchina.link_op.keys())[list(macchina.link_op.values()).index(operatore)]
-            macchina.log.append('{:0.1f} | {} | Inizio {} | {}'.format(env.now-tcq, macchina.name, nome, op ))
+            macchina.log.append('{:0.1f} | {} | Inizio {} | {}'.format(env.now, macchina.name, nome, op ))
             #st.write('{:0.1f} | {} | Inizio {}'.format(env.now-tcq, macchina.name, nome ))
             #st.write(macchina.sat_op)
-            macchina.log.append('{:0.1f} | {} | Fine {} | {}'.format(env.now, macchina.name, nome, op ))
+            macchina.log.append('{:0.1f} | {} | Fine {} | {}'.format(env.now + tcq, macchina.name, nome, op ))
             
             macchina.link[operatore][0] += tcq
             #st.write(macchina.sat_op)                       
