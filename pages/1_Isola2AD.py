@@ -152,11 +152,11 @@ with tab_input:
                             df_ciclo.loc[7,'Valore'],
                             i*10, freq_eq, t_eq, 
                             operatore1,operatore2,
-                            i, f1, t1, op_cq1,
-                            i,f2,t2, op_cq2,
-                            i,f3,t3, op_cq3,
-                            i,f4,t4, op_cq4,
-                            i,f5,t5, op_cq5,
+                            0, f1, t1, op_cq1,
+                            0,f2,t2, op_cq2,
+                            0,f3,t3, op_cq3,
+                            0,f4,t4, op_cq4,
+                            0,f5,t5, op_cq5,
                             i, turno_t1, op_ct1,
                             i*5, turno_t2, op_ct2,
                             i*8, turno_t3, op_ct3,
@@ -272,13 +272,14 @@ with tab_risultati:
             frame_op['operatore2'] = np.where(frame_op.Part == ' operatore2', frame_op.Durata, 0)
             frame_op['Label'] = frame_op.Macchina + " | " + frame_op.Descrizione 
             
-            log_operatori.append(frame_op)
+           # log_operatori.append(frame_op)
 
-        except:
-            pass
-        
+        except Exception  as e:
+            st.write(e)
+
+        log_operatori.append(frame_op)
         log_macchine.append(frame_prod)
-        
+
         prog += 1
 
 with tab_gantt:
@@ -289,12 +290,12 @@ with tab_gantt:
     intervallo = tempo[1] - tempo[0]
     gantt_op = pd.concat([logs for logs in log_operatori] )
     gantt_macchine = pd.concat([logs for logs in log_macchine])
-
     # qui deve essere filtrato il dataframe in base alla scelta
-    gantt_macchine = gantt_macchine[(gantt_macchine.Minuto > tempo[0]) & (gantt_macchine.Minuto < tempo[1]) ]
+    gantt_macchine = gantt_macchine[(gantt_macchine.Minuto >= tempo[0]) & (gantt_macchine.Minuto < tempo[1]) ]
     gantt_macchine = gantt_macchine.reset_index(drop=True)
     gantt_op = gantt_op[(gantt_op.Minuto > tempo[0]) & (gantt_op.Minuto < tempo[1]) ]
     gantt_op = gantt_op.sort_values(by=['Part','Minuto'])    
+
 
     unique = gantt_macchine.Macchina.unique()
 
