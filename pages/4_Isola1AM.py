@@ -20,15 +20,13 @@ st.sidebar.header("Isola 3 AD")
 with tab_input:
 
     env = simpy.Environment()
+    robot = simpy.PriorityResource(env, capacity=1)
+
     operatore1 = simpy.PriorityResource(env, capacity=1)
-    operatore2 = simpy.PriorityResource(env, capacity=1)
 
-    if st.sidebar.toggle('Marcatrice disabbinata (marca tutto il possibile)'):
-        raw_partenza = st.sidebar.number_input('Inserire WIP da marcare', step=1)
-    else:
-        raw_partenza = 0
+    
 
-    wip = {'raw':100000, 'lavorato1707':raw_partenza, 'lavorato1308':raw_partenza, 'finito':0 } 
+    wip = {'raw':100000, 'lavorato_Grob':0, 'lavorato1308':0, 'finito':0 } 
 
     col1, col2, col3 = st.columns([1,1,2])
     n = st.sidebar.number_input('Digitare il numero di macchine',step=1)
@@ -150,7 +148,7 @@ with tab_input:
 
     # creazione istanza della classe Machine
 
-            macchina = des.Machine_wip(env,
+            macchina = des.Machine_robot(env,
                             wip,
                             df_ciclo.loc[8,'Valore'], 
                             df_ciclo.loc[9,'Valore'],
@@ -162,7 +160,7 @@ with tab_input:
                             df_ciclo.loc[6,'Valore'],
                             df_ciclo.loc[7,'Valore'],
                             i*10, freq_eq, t_eq, 
-                            operatore1,operatore2,
+                            robot ,operatore1,
                             i, f1, t1, op_cq1,
                             i,f2,t2, op_cq2,
                             i,f3,t3, op_cq3,

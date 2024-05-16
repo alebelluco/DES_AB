@@ -1,3 +1,7 @@
+# Aggiornato 16/05/2024 
+# Evidenza di carico - scarico : per modificare--> riga 236, eliminare righe avvio - carico
+
+
 import streamlit as st
 import simpy
 import matplotlib.pyplot as plt
@@ -231,6 +235,7 @@ with tab_risultati:
 
     incluso = ['Controllo','controllo','CONTROLLO',
             'Trasporto','trasporto','TRASPORTO',
+            'carico','Avvio',
             #'Correzione','correzione','CORREZIONE',
             'Prelievo','prelievo','PRELIEVO',
             'Sap','SAP','sap']
@@ -271,8 +276,8 @@ with tab_risultati:
             frame_op['operatore1'] = np.where(frame_op.Part == ' operatore1', frame_op.Durata, 0)
             frame_op['operatore2'] = np.where(frame_op.Part == ' operatore2', frame_op.Durata, 0)
             frame_op['Label'] = frame_op.Macchina + " | " + frame_op.Descrizione 
-            
-           # log_operatori.append(frame_op)
+            frame_op = frame_op[(frame_op.operatore1!=0)|(frame_op.operatore2!=0)]
+
 
         except Exception  as e:
             st.write(e)

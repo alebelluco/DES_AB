@@ -56,7 +56,9 @@ if st.sidebar.toggle('Istruzioni'):
     with st.expander('Lettura risultati'):
         st.write('Argomento3')
 
-
+elif st.sidebar.toggle('Elenco modifiche'):
+    st.write('09/05/2024 | Isola3AD | Inserita possibilità di scegliere se disabbinare la marcatrice')
+    st.write('16/05/2024 | Isola2AD | Aggiunta visibilità del carico - scarico delle macchine sul gantt | la modifica impatta package des, Class Machine_isola2 ')
 else:
     sx1, cx1 = st.columns([2,8])
     with cx1:
