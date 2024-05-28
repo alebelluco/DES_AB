@@ -1,5 +1,7 @@
 # Aggiornato 16/05/2024 
 # Evidenza di carico - scarico : per modificare--> riga 236, eliminare righe avvio - carico
+# DEBUG - no cambio utensile sulle macchine dispari  -->  l'offset cambio utensile deve semepre  essere multiplo dl batch altrimenti non fa la chiamata
+# DEBUG - carico scarico visualizzato in modo non corretto --> frame_op doppio, uno per carico scarico, uno per altre attività
 
 
 import streamlit as st
@@ -80,15 +82,10 @@ with tab_input:
 
             #st.stop()
 
-
-
-
-
     #*** frequenza eq       
             t_eq = df_utensili.new.sum()
             df_utensili = df_utensili.drop('new',axis=1)
 
-        
             # recupero info cq
 
             for j in range(5):
@@ -175,7 +172,7 @@ with tab_input:
                             df_ciclo.loc[5,'Valore'],
                             df_ciclo.loc[6,'Valore'],
                             df_ciclo.loc[7,'Valore'],
-                            i*10, freq_eq, t_eq, 
+                            i*4, freq_eq, t_eq, 
                             operatore1,operatore2,
                             0, f1, t1, op_cq1,
                             0,f2,t2, op_cq2,
@@ -256,11 +253,15 @@ with tab_risultati:
 
     incluso = ['Controllo','controllo','CONTROLLO',
             'Trasporto','trasporto','TRASPORTO',
-            'carico','Avvio',
+            #'carico','Avvio',
             'utensile','pezzo'
             #'Correzione','correzione','CORREZIONE',
             'Prelievo','prelievo','PRELIEVO',
             'Sap','SAP','sap']
+
+    incluso_cs = [
+            'carico','Avvio']
+            
 
     escluso = ['Pronto','pronto','PRONTO',
             'Correzione','correzione','CORREZIONE',
@@ -300,12 +301,30 @@ with tab_risultati:
             frame_op['Label'] = frame_op.Macchina + " | " + frame_op.Descrizione 
             frame_op = frame_op[(frame_op.operatore1!=0)|(frame_op.operatore2!=0)]
 
-
         except Exception  as e:
             st.write(e)
 
-        st.write(frame)
+        # carico-scarico
+        try:
+            frame_cs = frame[[(any(check in desc for check in incluso_cs) and (all(check not in desc for check in escluso))) for desc in frame.Descrizione]]
+            #st.write(frame_cs)
+            #st.stop()
+            frame_cs['Durata'] = frame_cs.Minuto.shift(-1) - frame_cs.Minuto
+            frame_cs = frame_cs[[(all(check not in desc for check in filtro_fine)) for desc in frame_cs.Descrizione]]
+            frame_cs['Descrizione'] = frame_cs['Descrizione'].str[8:]
+            frame_cs['Macchina'] = macchina.name
+            frame_cs['operatore1'] = np.where(frame_cs.Part == ' operatore1', frame_cs.Durata, 0)
+            frame_cs['operatore2'] = np.where(frame_cs.Part == ' operatore2', frame_cs.Durata, 0)
+            frame_cs['Label'] = frame_cs.Macchina + " | " + frame_cs.Descrizione 
+            frame_cs = frame_cs[(frame_cs.operatore1!=0)|(frame_cs.operatore2!=0)]
+
+        except Exception  as e:
+            st.write(e)
+            
+
+        st.write(frame_cs)
         log_operatori.append(frame_op)
+        log_operatori.append(frame_cs)
         log_macchine.append(frame_prod)
 
         prog += 1
