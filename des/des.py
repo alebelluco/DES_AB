@@ -25,7 +25,6 @@ def CQ(macchina, env, operatore, tcq, nome):
             macchina.sat.append(tcq)             
         break   
 
-
 def CQ_T(macchina, env, operatore, tcq, offset, nome): #a differenza del controllo a frequenza, qui l'offset ritarda il controllo per non farlo cadere per forza ad inizio turno
     while True:
         macchina.log.append('{:0.1f} | {} | Pezzo pronto per {}'.format(env.now, macchina.name, nome ))          
@@ -67,18 +66,23 @@ def CQ_cassetto(macchina, env, operatore,robot, tcq, nome):
     while True:
         macchina.log.append('{:0.1f} | {} | Pezzo pronto per {}'.format(env.now, macchina.name, nome ))          
         yield env.timeout(0.1) #ritardo la chiamata in moodo da far prima caricare la macchina, il ritardo deve essere >= al tempo di carico scarico
-        with operatore.request(priority=0) as req:
-            with robot.request(priority=0)as req1:
+        with robot.request(priority=1) as req:
+            yield req
+            ripartenza = False
+            with operatore.request(priority=1)as req1:
                 yield req1 # blocco la risorsa
-                yield req
-                yield env.timeout(1)
+                #yield req
+                #yield env.timeout(1)
 
-            
                 yield env.timeout(tcq) 
 
                 op =  list(macchina.link_op.keys())[list(macchina.link_op.values()).index(operatore)]
+                robot =  list(macchina.link_op.keys())[list(macchina.link_op.values()).index(robot)]
                 macchina.log.append('{:0.1f} | {} | Inizio {} | {}'.format(env.now-tcq, macchina.name, nome, op ))
                 macchina.log.append('{:0.1f} | {} | Fine {} | {}'.format(env.now, macchina.name, nome, op ))
+
+                macchina.log.append('{:0.1f} | {} | Inizio {} | {}'.format(env.now-tcq, macchina.name, nome, robot ))
+                macchina.log.append('{:0.1f} | {} | Fine {} | {}'.format(env.now, macchina.name, nome, robot ))
                 
                 macchina.link[operatore][0] += tcq
 
@@ -86,17 +90,6 @@ def CQ_cassetto(macchina, env, operatore,robot, tcq, nome):
                 macchina.log_op.append('{:0.1f}_{} | cq_macchina {} | + {} minuti'.format(env.now,op, macchina.name, tcq ))
                 macchina.sat.append(tcq)             
         break   
-
-
-
-
-
-
-
-
-
-
-
 
 def Correzione(macchina, env, operatore, tc_corr):
     while True:               
@@ -124,6 +117,64 @@ def Other(macchina, env, operatore, tc, attività):
             macchina.log.append('{:0.1f} | {} | fine {} | {}'.format(env.now, macchina.name, attività, op))
             
             macchina.link[operatore][0] += tc
+        break   
+
+def upload(df):
+    '''
+    Output:
+    [0] = dic_gen \n
+    [1] = dic_cq \n
+    [2] = dic_other \n
+    [3]= dic_turno
+
+    '''
+    info = df[df.Cat_dati == 'generale']
+    dic_gen = dict(zip(info.Dato,info.Valore))
+
+    cq = df[df.Cat_dati=='cq']
+    dic_cq = {}
+    for controllo in cq.Subcat_dati.unique():
+        subdf = df[df.Subcat_dati == controllo]
+        periodo = subdf[subdf.Dato=='periodo'].Valore.iloc[0]
+        durata = subdf[subdf.Dato=='durata'].Valore.iloc[0]
+        op = subdf[subdf.Dato=='op'].Valore.iloc[0]
+        dic_cq[controllo]={'periodo':periodo,'durata':durata,'op':op}   
+
+    other = df[df.Cat_dati=='other']
+    dic_other = {}
+    for oth in other.Subcat_dati.unique():
+        subdf = df[df.Subcat_dati == oth]
+        periodo = subdf[subdf.Dato=='periodo'].Valore.iloc[0]
+        durata = subdf[subdf.Dato=='durata'].Valore.iloc[0]
+        op = subdf[subdf.Dato=='op'].Valore.iloc[0]
+        dic_other[oth]={'periodo':periodo,'durata':durata,'op':op}
+    
+    turno = df[df.Cat_dati=='turno']
+    dic_turno  = {}
+    for t in turno.Subcat_dati.unique():
+        subdf = df[df.Subcat_dati == t]
+        durata = subdf[subdf.Dato=='durata'].Valore.iloc[0]
+        op = subdf[subdf.Dato=='op'].Valore.iloc[0]
+        dic_turno[t]={'durata':durata,'op':op}
+
+
+    return dic_gen, dic_cq, dic_other, dic_turno
+
+def att_robot(macchina, env, operatore, tempo):
+    while True:               
+        yield env.timeout(0) #ritardo la chiamata in moodo da far prima caricare la macchina, il ritardo deve essere >= al tempo di carico scarico
+        with operatore.request(priority=2) as req: 
+            yield req # blocco la risorsa
+            yield env.timeout(tempo) 
+
+            # Ad ora non viene visualizzato niente sul gantt, nè sulla saturazione 
+
+
+            #op =  list(macchina.link_op.keys())[list(macchina.link_op.values()).index(operatore)]
+            #macchina.log.append('{:0.1f} | {} | inizio {} | {}'.format(env.now-tc, macchina.name, attività, op))
+            #macchina.log.append('{:0.1f} | {} | fine {} | {}'.format(env.now, macchina.name, attività, op))
+            
+            #macchina.link[operatore][0] += tc
         break   
 
 class Machine(object):
@@ -693,12 +744,13 @@ class Machine_isola_2(object):
             
             if self.t_cambio_ut != 0:
                 #if self.count_utensile == self.periodo_cu:
+                op_ut =  list(self.link_op.keys())[list(self.link_op.values()).index(self.op_cambio_ut)]
                 if self.count_utensile == self.periodo_cu:    
                     with self.op_cambio_ut.request(priority=1) as req: 
                         yield req # blocco la risorsa
                         yield self.env.timeout(self.t_cambio_ut)
-                        self.log.append('{:0.1f}  | {} | pezzo °{} | Inizio cambio utensile'.format(self.env.now-self.t_cambio_ut, self.name, self.count_utensile))
-                        self.log.append('{:0.1f}  | {} | Fine cambio utensile'.format(self.env.now, self.name))   
+                        self.log.append('{:0.1f}  | {} | Inizio cambio utensile | {}'.format(self.env.now-self.t_cambio_ut, self.name,op_ut))
+                        self.log.append('{:0.1f}  | {} | Fine cambio utensile | {}'.format(self.env.now, self.name,op_ut))   
                         self.link[self.op_cambio_ut][0] += self.t_cambio_ut
                     self.count_utensile = 0
 
@@ -1210,7 +1262,7 @@ class Machine_robot(object):
             while not self.wip[self.part_in] >= self.batch: # se non c'è WIP aspetto
                 yield self.env.timeout(0.01)     
 
-            with self.op_conduttore.request(priority=1) as req:
+            with self.op_conduttore.request(priority=0) as req:
                     yield req                  
                     yield self.env.timeout(self.cs)  #difica: self.cs + self.spostamento (che non esiste ad oggi negli input)
                     self.log.append('{:0.1f} | {} | Inizio carico-scarico'.format(self.env.now-self.cs, self.name))  
@@ -1221,6 +1273,7 @@ class Machine_robot(object):
                     self.log_op.append('{:0.1f}_{} | fine carico-scarico macchina {} | + {} minuti'.format(self.env.now,op, self.name, self.cs ))
                     self.sat.append(self.cs)
 
+            self.env.process(att_robot(self, self.env, self.op_conduttore, 10))
                 
             yield self.env.timeout(self.tc)  #lavoro un pezzo  
 
