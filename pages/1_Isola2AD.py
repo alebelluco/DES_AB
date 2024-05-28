@@ -61,8 +61,29 @@ with tab_input:
             df_turno.reset_index(drop=True)
 
     #info  cambio  utensili       
+            
+            
             freq_eq = 40
             df_utensili['new']=(df_utensili['Tempo sostituzione [min]']+df_utensili['Tempo correzione + ricontrollo [min]'])*freq_eq/df_utensili['Vita utensile [pezzi]']
+            #t_eq = 0
+            #media = 1
+            
+            #for i in range(100):
+            #    freq_eq=i
+            #    df_utensili['new']=(df_utensili['Tempo sostituzione [min]']+df_utensili['Tempo correzione + ricontrollo [min]'])*freq_eq/df_utensili['Vita utensile [pezzi]']
+            #    media = df_utensili.new.mean()
+            #    t_eq = df_utensili.new.sum()
+             #   if math.floor(t_eq/media) == 1:
+            #        break
+     
+            #st.write(t_eq)
+
+            #st.stop()
+
+
+
+
+
     #*** frequenza eq       
             t_eq = df_utensili.new.sum()
             df_utensili = df_utensili.drop('new',axis=1)
@@ -236,6 +257,7 @@ with tab_risultati:
     incluso = ['Controllo','controllo','CONTROLLO',
             'Trasporto','trasporto','TRASPORTO',
             'carico','Avvio',
+            'utensile','pezzo'
             #'Correzione','correzione','CORREZIONE',
             'Prelievo','prelievo','PRELIEVO',
             'Sap','SAP','sap']
@@ -282,6 +304,7 @@ with tab_risultati:
         except Exception  as e:
             st.write(e)
 
+        st.write(frame)
         log_operatori.append(frame_op)
         log_macchine.append(frame_prod)
 
