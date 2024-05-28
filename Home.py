@@ -59,10 +59,12 @@ if st.sidebar.toggle('Istruzioni'):
 elif st.sidebar.toggle('Elenco modifiche'):
     st.write('09/05/2024 | Isola3AD | Inserita possibilità di scegliere se disabbinare la marcatrice')
     st.write('16/05/2024 | Isola2AD | Aggiunta visibilità del carico - scarico delle macchine sul gantt | la modifica impatta package des, Class Machine_isola2 ')
+    st.write('28/05/2024 | Isola2AD | Corretto bug cambio utensile: le macchine dispari (1,3) avevano un offset che faceva partire il contatore da i*10 (non multiplo del batch = mai count_cu)')
 else:
-    sx1, cx1 = st.columns([2,8])
+    st.divider()
+    sx1, cx1 = st.columns([1,8])
     with cx1:
-        st.image('https://github.com/alebelluco/DES_AB/blob/main/Immagini_DES/motore4.png?raw=True', width=800)
+        st.image('https://github.com/alebelluco/DES_AB/blob/main/Immagini_DES/des_lm.png?raw=True', width=1200)
 
 
 
